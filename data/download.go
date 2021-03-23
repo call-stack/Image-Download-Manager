@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 )
 
@@ -19,8 +20,17 @@ func NewDowload() *Download {
 	return &Download{}
 }
 
-func GetDownloads() Downloads {
-	return downloadList
+func GetDownloads(downloadID string) (Download, error) {
+	result := Download{}
+	for _, down := range downloadList {
+		if down.ID == downloadID {
+			return *down, nil
+		}
+
+	}
+
+	return result, errors.New("Not Found")
+
 }
 
 func (d *Download) FromJSON(r io.Reader) error {
@@ -28,7 +38,7 @@ func (d *Download) FromJSON(r io.Reader) error {
 	return e.Decode(d)
 }
 
-func (p *Downloads) ToJSON(w io.Writer) error {
+func (p *Download) ToJSON(w io.Writer) error {
 	e := json.NewEncoder(w)
 	return e.Encode(p)
 }

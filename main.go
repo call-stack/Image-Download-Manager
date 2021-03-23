@@ -4,19 +4,22 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/kalpitpant/file-download-manager/handlers"
 )
 
 func main() {
 	fmt.Println("Webserver running....")
-	hh := handlers.NewHealth()
+	// hh := handlers.NewHealth()
 	dw := handlers.NewDowload()
-	sm := http.NewServeMux()
+	sm := mux.NewRouter()
 
-	sm.Handle("/health", hh)
+	getRouter := sm.Methods("GET").Subrouter()
+	postRouter := sm.Methods("POST").Subrouter()
 
-	// sm.Handle("/downloads", dw)
-	sm.Handle("/downloads/*", dw)
+	getRouter.HandleFunc("/downloads/{downloadID}", dw.GetDownloads)
+
+	postRouter.HandleFunc("/downloads", dw.DownloadImages)
 
 	s := &http.Server{
 		Addr:    ":8081",
