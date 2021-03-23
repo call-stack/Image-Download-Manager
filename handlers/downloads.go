@@ -63,7 +63,7 @@ func (h *Download) DownloadImages(rw http.ResponseWriter, r *http.Request) {
 	for _, url := range down.URLS {
 		id := uuid.New()
 
-		out_image := id.String() + ".jpg"
+		out_image := "images/" + id.String() + ".jpg"
 		response, e := http.Get(url)
 		if e != nil {
 			log.Fatal(e)
