@@ -10,7 +10,7 @@ import (
 
 func main() {
 	fmt.Println("Webserver running....")
-	// hh := handlers.NewHealth()
+	hh := handlers.NewHealth()
 	dw := handlers.NewDowload()
 	sm := mux.NewRouter()
 
@@ -18,8 +18,8 @@ func main() {
 	postRouter := sm.Methods("POST").Subrouter()
 
 	getRouter.HandleFunc("/downloads/{downloadID}", dw.GetDownloads)
-
 	postRouter.HandleFunc("/downloads", dw.DownloadImages)
+	getRouter.Handle("/health", hh)
 
 	s := &http.Server{
 		Addr:    ":8081",

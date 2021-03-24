@@ -6,18 +6,28 @@ import (
 	"io"
 )
 
+type DownloadRequest struct {
+	TYPE string   `json:"type"`
+	URLS []string `json:"urls"`
+}
+
 type Download struct {
-	TYPE       string   `json:"type"`
-	URLS       []string `json:"urls"`
-	ID         string
-	start_time string
-	end_time   string
+	ID           string            `json:"id"`
+	STARTTIME    string            `json:"start_time"`
+	ENDTIME      string            `json:"end_time"`
+	STATUS       string            `json:"status"`
+	DOWNLOADTYPE string            `json:"download_type"`
+	FILE         map[string]string `json:"files"`
 }
 
 type Downloads []*Download
 
 func NewDowload() *Download {
 	return &Download{}
+}
+
+func NewDowloadRequest() *DownloadRequest {
+	return &DownloadRequest{}
 }
 
 func GetDownloads(downloadID string) (Download, error) {
@@ -33,7 +43,7 @@ func GetDownloads(downloadID string) (Download, error) {
 
 }
 
-func (d *Download) FromJSON(r io.Reader) error {
+func (d *DownloadRequest) FromJSON(r io.Reader) error {
 	e := json.NewDecoder(r)
 	return e.Decode(d)
 }

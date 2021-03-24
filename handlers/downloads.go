@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -18,20 +20,9 @@ func NewDowload() *Download {
 	return &Download{}
 }
 
-// func (h *Download) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-// 	if r.Method == http.MethodGet {
-// 		fmt.Println("Reponse object", r.URL.Path)
-// 		// h.getDownloads(rw, r)
-// 		return
-// 	}
+const THROTLLER = 20
 
-// 	if r.Method == http.MethodPost {
-// 		h.downloadImages(rw, r)
-// 		return
-// 	}
-
-// 	rw.WriteHeader(http.StatusMethodNotAllowed)
-// }
+var m = sync.RWMutex{}
 
 func (h *Download) GetDownloads(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -50,37 +41,96 @@ func (h *Download) GetDownloads(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Download) DownloadImages(rw http.ResponseWriter, r *http.Request) {
-	down := &data.Download{}
-	err := down.FromJSON(r.Body)
+	down_request := &data.DownloadRequest{}
+	err := down_request.FromJSON(r.Body)
 
 	if err != nil {
 		http.Error(rw, "Unable to Marshal json", http.StatusBadRequest)
 		return
 	}
-	down_id := uuid.New().String()
-	down.TYPE = "Serial"
-	down.ID = down_id
-	for _, url := range down.URLS {
-		id := uuid.New()
 
-		out_image := "images/" + id.String() + ".jpg"
-		response, e := http.Get(url)
-		if e != nil {
-			log.Fatal(e)
-		}
-		defer response.Body.Close()
-		file, err := os.Create(out_image)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
-		_, err = io.Copy(file, response.Body)
-		if err != nil {
-			log.Fatal(err)
+	down_id := uuid.New().String()
+	if down_request.TYPE == "concurrent" {
+		go downloader(down_request, down_id)
+	} else {
+		downloader(down_request, down_id)
+	}
+
+	rw.Write([]byte(down_id))
+}
+
+func downloader(dr *data.DownloadRequest, id string) {
+	var wg sync.WaitGroup
+	down := &data.Download{}
+	down.ID = id
+	files := make(map[string]string)
+	down.STARTTIME = time.Now().String()
+	sem := make(chan int, THROTLLER)
+
+	for index, url := range dr.URLS {
+		if dr.TYPE == "concurrent" {
+			sem <- index
+			wg.Add(1)
+			go downloadImageFromURLConcurrently(&wg, url, files, index, sem)
+		} else {
+			downloadImageFromURLSerial(url, files)
 		}
 
 	}
-
+	wg.Wait()
+	down.ENDTIME = time.Now().String()
+	down.STATUS = "SUCCESSFULL"
+	down.DOWNLOADTYPE = dr.TYPE
+	down.FILE = files
 	data.InsertDownload(down)
-	rw.Write([]byte(down_id))
+	fmt.Println("Success in downloading the images.")
+}
+
+func downloadImageFromURLConcurrently(wg *sync.WaitGroup, url string, files map[string]string, index int, sem chan int) {
+	image_id := uuid.New().String()
+	out_image := "images/" + image_id + ".jpg"
+	response, e := http.Get(url)
+	if e != nil {
+		log.Fatal(e)
+	}
+	defer response.Body.Close()
+	file, err := os.Create(out_image)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	m.Lock()
+	files[url] = out_image
+	m.Unlock()
+	<-sem
+	wg.Done()
+
+}
+
+func downloadImageFromURLSerial(url string, files map[string]string) {
+	time.Sleep(10 * time.Second)
+	image_id := uuid.New().String()
+	out_image := "images/" + image_id + ".jpg"
+	response, e := http.Get(url)
+	if e != nil {
+		log.Fatal(e)
+	}
+	defer response.Body.Close()
+	file, err := os.Create(out_image)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	files[url] = out_image
 }
