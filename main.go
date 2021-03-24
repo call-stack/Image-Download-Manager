@@ -12,14 +12,17 @@ func main() {
 	fmt.Println("Webserver running....")
 	hh := handlers.NewHealth()
 	dw := handlers.NewDowload()
+	df := handlers.NewDownloadedFiles()
 	sm := mux.NewRouter()
 
 	getRouter := sm.Methods("GET").Subrouter()
 	postRouter := sm.Methods("POST").Subrouter()
 
-	getRouter.HandleFunc("/downloads/{downloadID}", dw.GetDownloads)
-	postRouter.HandleFunc("/downloads", dw.DownloadImages)
 	getRouter.Handle("/health", hh)
+	getRouter.HandleFunc("/downloads/{downloadID}", dw.GetDownloads)
+	getRouter.HandleFunc("/files", df.GetDownloads)
+
+	postRouter.HandleFunc("/downloads", dw.DownloadImages)
 
 	s := &http.Server{
 		Addr:    ":8081",

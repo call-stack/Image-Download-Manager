@@ -22,8 +22,20 @@ type Download struct {
 
 type Downloads []*Download
 
+var downloadList = []*Download{}
+
 func NewDowload() *Download {
 	return &Download{}
+}
+
+func (d *DownloadRequest) FromJSON(r io.Reader) error {
+	e := json.NewDecoder(r)
+	return e.Decode(d)
+}
+
+func (p *Download) ToJSON(w io.Writer) error {
+	e := json.NewEncoder(w)
+	return e.Encode(p)
 }
 
 func NewDowloadRequest() *DownloadRequest {
@@ -43,18 +55,11 @@ func GetDownloads(downloadID string) (Download, error) {
 
 }
 
-func (d *DownloadRequest) FromJSON(r io.Reader) error {
-	e := json.NewDecoder(r)
-	return e.Decode(d)
-}
+func GetAllDownload() Downloads {
 
-func (p *Download) ToJSON(w io.Writer) error {
-	e := json.NewEncoder(w)
-	return e.Encode(p)
+	return downloadList
 }
 
 func InsertDownload(d *Download) {
 	downloadList = append(downloadList, d)
 }
-
-var downloadList = []*Download{}
