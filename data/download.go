@@ -7,8 +7,8 @@ import (
 )
 
 type Download struct {
-	TYPE       string
-	URLS       []string
+	TYPE       string   `json:"type"`
+	URLS       []string `json:"urls"`
 	ID         string
 	start_time string
 	end_time   string
