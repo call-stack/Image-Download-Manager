@@ -1,6 +1,6 @@
 # **FDM**
 
-This repo will contain code to build a file(image) download manager.
+This repo contains code to build a file(image) download manager.
 
 ## STEPS
 - Clone this repository in your system.
