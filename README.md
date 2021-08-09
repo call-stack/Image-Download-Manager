@@ -12,11 +12,3 @@ This repo contains code to build a file(image) download manager.
     Note-> Run the docker run command from the root of this repo. Otherwise, change the host mounting point($PWD/images)
 
     Server is up and running with host: http://127.0.0.1 and port: 8081. Images will be downloaded in images folder.
-
-    ##Doing some thing..main
-    
-    ##Doing some thing..B2
-
-
-    ##Doing some thing..B4
-    ##Doing some thing..B3
