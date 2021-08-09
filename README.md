@@ -12,3 +12,24 @@ This repo contains code to build a file(image) download manager.
     Note-> Run the docker run command from the root of this repo. Otherwise, change the host mounting point($PWD/images)
 
     Server is up and running with host: http://127.0.0.1 and port: 8081. Images will be downloaded in images folder.
+
+
+<hr>
+
+To Download image sequentially:
+```go
+http://127.0.0.1:8081/downloads/
+Request Body:  {
+    "type":"serial",
+    "urls":["image_url_1", "image_url_2", ....]
+}
+```
+
+To Download images concurrently:
+```go
+http://127.0.0.1:8081/downloads/
+Request Body:  {
+    "type":"concurrent",
+    "urls":["image_url_1", "image_url_2", ....]
+}
+```
